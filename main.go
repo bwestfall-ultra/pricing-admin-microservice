@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 var ctx = context.Background()
@@ -64,6 +66,13 @@ type SkuResponse struct {
 
 var rdb *redis.Client
 
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found")
+	}
+}
+
 func main() {
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     "127.0.0.1:6379",
@@ -86,8 +95,12 @@ func main() {
 	router.HandleFunc("/modifiers/{id}", DeleteModifierHandler).Methods("DELETE")
 	router.HandleFunc("/modifiers", ListModifiersHandler).Methods("GET")
 
-	log.Println("Pricing admin API running on :8083")
-	log.Fatal(http.ListenAndServe(":8083", router))
+	// log.Println("Pricing admin API running on :8083")
+	// log.Fatal(http.ListenAndServe(":8083", router))
+	servicePort := os.Getenv("SERVICE_PORT")
+	fmt.Println("Server listening on :" + servicePort)
+	log.Fatal(http.ListenAndServe(":"+servicePort, nil))
+
 }
 
 // ---- PRICE HANDLERS ----
