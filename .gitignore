@@ -1,0 +1,59 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Build directories
+/build/
+/bin/
+/dist/
+
+# Go workspace stuff
+# *.mod
+# *.sum
+vendor/
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage/test output
+coverage.*
+*.coverprofile
+
+# Local tools/configs
+*.local
+*.bak
+*.tmp
+
+# GoLand and JetBrains-specific
+*.iml
+*.ipr
+*.iws
+out/
+
+# Node modules (if frontend or web parts exist)
+node_modules/
+
+# Docker compose override
+docker-compose.override.yml
+
+redis/data/dump.rdb

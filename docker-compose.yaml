@@ -1,0 +1,15 @@
+services:
+
+  pricing-admin-service:
+    build:
+      context: .
+    container_name: pricing-admin-service
+    ports:
+      - "8083:8083"
+    restart: unless-stopped
+    networks:
+      - pricing-net
+
+networks:
+  pricing-net:
+    external: true

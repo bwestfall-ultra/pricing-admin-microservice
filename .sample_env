@@ -1,0 +1,15 @@
+
+# Redis Config
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_PASSWORD=mypassword   # Leave empty if no password
+REDIS_DB=0                  # Redis DB number
+
+
+# Pricing Config
+DEFAULT_PRICELIST=default
+DEFAULT_PRICE=999
+
+# Pricing Service Settings
+SERVICE_PORT=8083
+
