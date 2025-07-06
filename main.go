@@ -29,6 +29,7 @@ type ProductPrice struct {
 	EndDate     string      `json:"end_date"`   // nil = forever
 	BasePrice   float64     `json:"base_price"`
 	TierPrice   []TierPrice `json:"tier_price"`
+	MinSalePrice float64 	`json:"min_sale_price"`
 }
 
 type TierPrice struct {
@@ -74,10 +75,19 @@ func init() {
 }
 
 func main() {
+
+	redisHost := os.Getenv("REDIS_HOST")
+	redisPort := os.Getenv("REDIS_PORT")
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	redisDB, err := strconv.Atoi(os.Getenv("REDIS_DB"))
+	if err != nil {
+		redisDB = 0
+	}
+
 	rdb = redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1:6379",
-		Password: "mypassword",
-		DB:       0,
+		Addr:     fmt.Sprintf("%s:%s", redisHost, redisPort),
+		Password: redisPassword,
+		DB:       redisDB,
 	})
 
 	router := mux.NewRouter()
@@ -99,7 +109,7 @@ func main() {
 	// log.Fatal(http.ListenAndServe(":8083", router))
 	servicePort := os.Getenv("SERVICE_PORT")
 	fmt.Println("Server listening on :" + servicePort)
-	log.Fatal(http.ListenAndServe(":"+servicePort, nil))
+	log.Fatal(http.ListenAndServe(":"+servicePort, router))
 
 }
 
@@ -149,19 +159,13 @@ func AddOrUpdatePriceHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	log.Println(price.StartDate)
-
-	// if price.BasePrice <= 0 {
-	// 	http.Error(w, "Base Price (currency) is required", http.StatusBadRequest)
-	// 	return
-	// }
-
 	key := fmt.Sprintf("price:%s:%s:%s:%s", price.PriceListID, price.SKUID, price.Currency, price.StartDate)
 
 	priceKey := fmt.Sprintf("price:%s:%s:%s", price.PriceListID, price.SKUID, price.Currency)
 
 	hashFields := FormatTierPricesForRedis(price.TierPrice)
 	hashFields["end_date"] = price.EndDate
+	hashFields["min_sale_price"] = price.MinSalePrice
 
 	log.Println(hashFields)
 
@@ -249,6 +253,7 @@ func GetSkusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetPriceslistHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Getting the handlers")
 	key := "price:*:*:*:*"
 	pattern := key //"price:*:*:*:*"
 	var cursor uint64
@@ -273,7 +278,7 @@ func GetPriceslistHandler(w http.ResponseWriter, r *http.Request) {
 
 	for _, v := range keys {
 		parts := strings.Split(v, ":")
-		log.Println(parts)
+
 		if len(parts) < 5 {
 			continue // not a valid key
 		}
@@ -453,7 +458,7 @@ func decodeTierPriceMap(data map[string]string) ([]TierPrice, error) {
 	for k, v := range data {
 		log.Println(k)
 
-		if k == "end_date" || k == "currency" || k == "start_ts" || k == "end_ts" {
+		if k == "end_date" || k == "currency" || k == "start_ts" || k == "end_ts" || k == "min_sale_price"{
 			continue
 		}
 
@@ -593,4 +598,9 @@ func UploadPricesHandler(rdb *redis.Client) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Prices uploaded successfully"))
 	}
+}
+
+func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
+	// Implement your custom 404 response here
+	http.Error(w, "Custom 404 Page Not Found", http.StatusNotFound)
 }
