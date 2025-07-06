@@ -22,14 +22,14 @@ import (
 var ctx = context.Background()
 
 type ProductPrice struct {
-	PriceListID string      `json:"price_list_id"`
-	SKUID       string      `json:"sku_id"`
-	Currency    string      `json:"currency"`
-	StartDate   string      `json:"start_date"` // nil = beginning of time
-	EndDate     string      `json:"end_date"`   // nil = forever
-	BasePrice   float64     `json:"base_price"`
-	TierPrice   []TierPrice `json:"tier_price"`
-	MinSalePrice float64 	`json:"min_sale_price"`
+	PriceListID  string      `json:"price_list_id"`
+	SKUID        string      `json:"sku_id"`
+	Currency     string      `json:"currency"`
+	StartDate    string      `json:"start_date"` // nil = beginning of time
+	EndDate      string      `json:"end_date"`   // nil = forever
+	BasePrice    float64     `json:"base_price"`
+	TierPrice    []TierPrice `json:"tier_price"`
+	MinSalePrice float64     `json:"min_sale_price"`
 }
 
 type TierPrice struct {
@@ -105,8 +105,6 @@ func main() {
 	router.HandleFunc("/modifiers/{id}", DeleteModifierHandler).Methods("DELETE")
 	router.HandleFunc("/modifiers", ListModifiersHandler).Methods("GET")
 
-	// log.Println("Pricing admin API running on :8083")
-	// log.Fatal(http.ListenAndServe(":8083", router))
 	servicePort := os.Getenv("SERVICE_PORT")
 	fmt.Println("Server listening on :" + servicePort)
 	log.Fatal(http.ListenAndServe(":"+servicePort, router))
@@ -161,7 +159,7 @@ func AddOrUpdatePriceHandler(w http.ResponseWriter, r *http.Request) {
 
 	key := fmt.Sprintf("price:%s:%s:%s:%s", price.PriceListID, price.SKUID, price.Currency, price.StartDate)
 
-	priceKey := fmt.Sprintf("price:%s:%s:%s", price.PriceListID, price.SKUID, price.Currency)
+	//priceKey := fmt.Sprintf("price:%s:%s:%s", price.PriceListID, price.SKUID, price.Currency)
 
 	hashFields := FormatTierPricesForRedis(price.TierPrice)
 	hashFields["end_date"] = price.EndDate
@@ -169,17 +167,22 @@ func AddOrUpdatePriceHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Println(hashFields)
 
+	if err := rdb.Del(ctx, key).Err(); err != nil {
+		http.Error(w, "Failed to delete price", http.StatusInternalServerError)
+		return
+	}
+
 	if err := rdb.HSet(ctx, key, hashFields).Err(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	start, _ := time.Parse("2006-01-02", price.StartDate)
+	// start, _ := time.Parse("2006-01-02", price.StartDate)
 
-	rdb.ZAdd(ctx, priceKey, &redis.Z{
-		Score:  float64(start.Unix()),
-		Member: key,
-	})
+	// rdb.ZAdd(ctx, priceKey, &redis.Z{
+	// 	Score:  float64(start.Unix()),
+	// 	Member: key,
+	// })
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Price added or updated"))
@@ -346,8 +349,12 @@ func GetPricesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		parts := strings.Split(v, ":")
+		minSalePrice, err := strconv.ParseFloat(val["min_sale_price"], 64)
+		if err != nil {
+			fmt.Println("Error converting string to float64:", err)
+		}
 
-		prices = append(prices, ProductPrice{SKUID: parts[2], Currency: parts[3], BasePrice: tierPrices[0].BasePrice, PriceListID: parts[1], StartDate: parts[4], EndDate: val["end_date"], TierPrice: tierPrices})
+		prices = append(prices, ProductPrice{SKUID: parts[2], Currency: parts[3], BasePrice: tierPrices[0].BasePrice, PriceListID: parts[1], StartDate: parts[4], EndDate: val["end_date"], MinSalePrice: minSalePrice, TierPrice: tierPrices})
 
 	}
 
@@ -458,7 +465,7 @@ func decodeTierPriceMap(data map[string]string) ([]TierPrice, error) {
 	for k, v := range data {
 		log.Println(k)
 
-		if k == "end_date" || k == "currency" || k == "start_ts" || k == "end_ts" || k == "min_sale_price"{
+		if k == "end_date" || k == "currency" || k == "start_ts" || k == "end_ts" || k == "min_sale_price" {
 			continue
 		}
 
