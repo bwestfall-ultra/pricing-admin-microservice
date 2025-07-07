@@ -551,6 +551,7 @@ func UploadPricesHandler(rdb *redis.Client) http.HandlerFunc {
 
 			data := map[string]interface{}{
 				"end_date": row["end_date"],
+				"min_sale_price":row["min_sale_price"], 
 			}
 
 			// Add tier prices

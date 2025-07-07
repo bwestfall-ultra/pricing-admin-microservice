@@ -49,7 +49,7 @@ func main() {
 
 	// CSV Header
 	header := []string{
-		"sku_id", "price_list_id", "currency", "base_price", "start_date", "end_date",
+		"sku_id", "price_list_id", "currency", "base_price", "start_date", "end_date","min_sale_price",
 		"tier_qty_1", "tier_price_1", "tier_qty_2", "tier_price_2",
 		"tier_qty_3", "tier_price_3", "tier_qty_4", "tier_price_4",
 	}
@@ -58,11 +58,11 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	priceLists := []string{"default", "wholesale", "b2b"}
-	numSKUs := 1000000
+	numSKUs := 10000
 	dateWindows := generateDateWindows()
 
 	for i := 0; i < numSKUs; i++ {
-		skuID := fmt.Sprintf("SKU%05d", rand.Intn(100000))
+		skuID := fmt.Sprintf("SKU%010d", rand.Intn(1000000000))
 		currency := "USD"
 
 		for _, priceList := range priceLists {
@@ -94,6 +94,7 @@ func main() {
 
 func writePriceRow(writer *csv.Writer, skuID, priceList, currency string, window PriceWindow) {
 	basePrice := rand.Intn(151) + 50 // $50–$200 whole dollars
+	min_sale_price := (basePrice * 60) / 100
 
 	record := []string{
 		skuID,
@@ -102,6 +103,7 @@ func writePriceRow(writer *csv.Writer, skuID, priceList, currency string, window
 		strconv.Itoa(basePrice),
 		window.StartDate,
 		window.EndDate,
+		strconv.Itoa(min_sale_price),
 	}
 
 	// Always include tier 1: qty=1, price=basePrice
