@@ -159,24 +159,29 @@ func AddOrUpdatePriceHandler(w http.ResponseWriter, r *http.Request) {
 
 	key := fmt.Sprintf("price:%s:%s:%s:%s", price.PriceListID, price.SKUID, price.Currency, price.StartDate)
 
-	priceKey := fmt.Sprintf("price:%s:%s:%s", price.PriceListID, price.SKUID, price.Currency)
+	//priceKey := fmt.Sprintf("price:%s:%s:%s", price.PriceListID, price.SKUID, price.Currency)
 
 	hashFields := FormatTierPricesForRedis(price.TierPrice)
 	hashFields["end_date"] = price.EndDate
 	hashFields["min_sale_price"] = price.MinSalePrice
 
-	
+
+	if err := rdb.Del(ctx, key).Err(); err != nil {
+		http.Error(w, "Failed to delete price", http.StatusInternalServerError)
+		return
+	}
+
 	if err := rdb.HSet(ctx, key, hashFields).Err(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	start, _ := time.Parse("2006-01-02", price.StartDate)
+	// start, _ := time.Parse("2006-01-02", price.StartDate)
 
-	rdb.ZAdd(ctx, priceKey, &redis.Z{
-		Score:  float64(start.Unix()),
-		Member: key,
-	})
+	// rdb.ZAdd(ctx, priceKey, &redis.Z{
+	// 	Score:  float64(start.Unix()),
+	// 	Member: key,
+	// })
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Price added or updated"))
@@ -336,8 +341,12 @@ func GetPricesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		parts := strings.Split(v, ":")
+		minSalePrice, err := strconv.ParseFloat(val["min_sale_price"], 64)
+		if err != nil {
+			fmt.Println("Error converting string to float64:", err)
+		}
 
-		prices = append(prices, ProductPrice{SKUID: parts[2], Currency: parts[3], BasePrice: tierPrices[0].BasePrice, PriceListID: parts[1], StartDate: parts[4], EndDate: val["end_date"], TierPrice: tierPrices})
+		prices = append(prices, ProductPrice{SKUID: parts[2], Currency: parts[3], BasePrice: tierPrices[0].BasePrice, PriceListID: parts[1], StartDate: parts[4], EndDate: val["end_date"], MinSalePrice: minSalePrice, TierPrice: tierPrices})
 
 	}
 
@@ -446,7 +455,6 @@ func decodeTierPriceMap(data map[string]string) ([]TierPrice, error) {
 	var tiers []TierPrice
 
 	for k, v := range data {
-		
 		if k == "end_date" || k == "currency" || k == "start_ts" || k == "end_ts" || k == "min_sale_price" {
 			continue
 		}
@@ -533,6 +541,7 @@ func UploadPricesHandler(rdb *redis.Client) http.HandlerFunc {
 
 			data := map[string]interface{}{
 				"end_date": row["end_date"],
+				"min_sale_price":row["min_sale_price"], 
 			}
 
 			// Add tier prices
