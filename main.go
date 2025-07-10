@@ -165,7 +165,6 @@ func AddOrUpdatePriceHandler(w http.ResponseWriter, r *http.Request) {
 	hashFields["end_date"] = price.EndDate
 	hashFields["min_sale_price"] = price.MinSalePrice
 
-	log.Println(hashFields)
 
 	if err := rdb.Del(ctx, key).Err(); err != nil {
 		http.Error(w, "Failed to delete price", http.StatusInternalServerError)
@@ -232,8 +231,8 @@ func GetSkusHandler(w http.ResponseWriter, r *http.Request) {
 
 	for _, v := range keys {
 		parts := strings.Split(v, ":")
-		log.Println(parts)
-		if len(parts) == 4 {
+		
+		if len(parts) == 5 {
 			skulist := parts[2]
 			skuSet[skulist] = true
 		}
@@ -244,20 +243,15 @@ func GetSkusHandler(w http.ResponseWriter, r *http.Request) {
 		distinctSkus = append(distinctSkus, pl)
 	}
 
-	sort.Strings(distinctSkus)
-
-	fmt.Println("Distinct SKUs:")
-	for _, pl := range distinctSkus {
-		fmt.Println("  -", pl)
-	}
 	w.Header().Set("Content-Type", "application/json")
 
 	json.NewEncoder(w).Encode(SkuResponse{distinctSkus})
 }
 
 func GetPriceslistHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Getting the handlers")
-	key := "price:*:*:*:*"
+
+	//key := "price:*:*:*:*"
+	key := "price:*"
 	pattern := key //"price:*:*:*:*"
 	var cursor uint64
 	pricelistSet := make(map[string]bool)
@@ -313,7 +307,7 @@ func GetPricesHandler(w http.ResponseWriter, r *http.Request) {
 
 	pattern := key //"price:*:8a82a4ab90e2be830190e34a78751337:*:*"
 
-	log.Println(pattern)
+	
 	var cursor uint64
 	var keys []string
 	var err error
@@ -339,8 +333,6 @@ func GetPricesHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			continue
 		}
-
-		log.Println(val)
 
 		tierPrices, err := decodeTierPriceMap(val)
 
@@ -439,10 +431,10 @@ func ListModifiersHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to list modifiers", http.StatusInternalServerError)
 		return
 	}
-	log.Println(len(ids))
+	
 	var mods []PriceModifier
 	for _, id := range ids {
-		log.Println(id)
+		
 		val, err := rdb.Get(ctx, fmt.Sprintf("modifier:%s", id)).Result()
 		if err != nil {
 			continue
@@ -463,8 +455,6 @@ func decodeTierPriceMap(data map[string]string) ([]TierPrice, error) {
 	var tiers []TierPrice
 
 	for k, v := range data {
-		log.Println(k)
-
 		if k == "end_date" || k == "currency" || k == "start_ts" || k == "end_ts" || k == "min_sale_price" {
 			continue
 		}
@@ -594,7 +584,6 @@ func UploadPricesHandler(rdb *redis.Client) http.HandlerFunc {
 				data[strconv.Itoa(t.Qty)] = t.Price
 			}
 
-			log.Println(data)
 
 			if err := rdb.HSet(ctx, priceKey, data).Err(); err != nil {
 				fmt.Println("HSET error:", err)
