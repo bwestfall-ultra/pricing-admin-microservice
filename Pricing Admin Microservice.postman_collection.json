@@ -1,0 +1,247 @@
+{
+	"info": {
+		"_postman_id": "ac0f8957-7d71-4c42-98bb-2b4eb9fb6ee1",
+		"name": "Pricing Admin Microservice",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "2098173"
+	},
+	"item": [
+		{
+			"name": "UCE Pricing Admin",
+			"item": [
+				{
+					"name": "Get Modifiers",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{Token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": "http://localhost:8083/modifiers"
+					},
+					"response": []
+				},
+				{
+					"name": "Add/Update Modifier",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"mod124\",\n    \"type\": \"productType\",\n    \"conditions\": { \"productType\": \"Test\" },\n    \"adjustment\": -50,\n    \"rate_type\": \"percent\",\n    \"excluded_skus\": [],\n    \"included_skus\": [\"sku123\", \"000d4749-319d-4fcf-9d02-5f122913702d\", \"8a82a4ab90e2be830190e34a78751337\"],\n    \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8083/modifiers"
+					},
+					"response": [
+						{
+							"name": "Add Product Type Modifier",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": \"mod5\",\n    \"type\": \"productType\",\n    \"conditions\": { \"productType\": \"Test\" },\n    \"adjustment\": -25,\n    \"rate_type\": \"percent\",\n    \"excluded_skus\": [],\n    \"included_skus\": [\"SKU0690573603\"],\n    \"status\": \"active\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "http://localhost:8083/modifiers"
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						},
+						{
+							"name": "Add Segment Modifier",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": \"mod6\",\n    \"type\": \"segment\",\n    \"conditions\": { \"segment\": \"First Time Visitor\" },\n    \"adjustment\": -10,\n    \"rate_type\": \"percent\",\n    \"excluded_skus\": [],\n    \"included_skus\": [],\n    \"status\": \"active\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "http://localhost:8083/modifiers"
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Delete Modifier",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": "http://localhost:8083/modifiers/mod123"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Prices by SKU",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8083/prices/*/{{sku}}/*"
+					},
+					"response": [
+						{
+							"name": "Get Prices by SKU",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:8083/prices/*/SKU0690573603/*"
+							},
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [
+								{
+									"expires": "Invalid Date"
+								}
+							],
+							"body": ""
+						},
+						{
+							"name": "Get Prices by SKU for given Pricelist",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:8083/prices/b2b/SKU0690573603/*"
+							},
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [
+								{
+									"expires": "Invalid Date"
+								}
+							],
+							"body": ""
+						}
+					]
+				},
+				{
+					"name": "Get Pricelists",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8083/prices/pricelists"
+					},
+					"response": []
+				},
+				{
+					"name": "Get SKUs",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8083/prices/skus"
+					},
+					"response": []
+				},
+				{
+					"name": "Add SKU Price",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sku_id\": \"8a82a4ab90e2be830190e34a78751337\",\n  \"currency\": \"USD\",\n  \"base_price\": 100,\n  \"price_list_id\": \"default\",\n  \"start_date\": \"2025-01-01\",\n  \"end_date\": \"\",\n  \"min_sale_price\": 50,\n  \"tier_price\": [\n    {\n      \"qty\": 1,\n      \"base_price\": 99.99\n    },\n    {\n      \"qty\": 10,\n      \"base_price\": 90\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8083/prices"
+					},
+					"response": [
+						{
+							"name": "Add SKU Price",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sku_id\": \"SKU0690573603\",\n  \"currency\": \"USD\",\n  \"base_price\": 100,\n  \"price_list_id\": \"default\",\n  \"start_date\": \"2025-01-01\",\n  \"end_date\": \"\",\n  \"min_sale_price\": 50,\n  \"tier_price\": [\n    {\n      \"qty\": 1,\n      \"base_price\": 99.99\n    },\n    {\n      \"qty\": 10,\n      \"base_price\": 90\n    }\n  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "http://localhost:8083/prices"
+							},
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [
+								{
+									"expires": "Invalid Date"
+								}
+							],
+							"body": ""
+						}
+					]
+				},
+				{
+					"name": "Delete SKU Price",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"sku_id\":\"test1\",\"currency\":\"USD\",\"price_list_id\":\"default\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8083/prices"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
